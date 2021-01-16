@@ -1,0 +1,139 @@
+<html>
+
+<head>
+    <title>${title}</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/gh/somejsdelivercdn/azuremediaplayer/azuremediaplayer.min.css" rel="stylesheet">
+    <script src="https://amp.azure.net/libs/amp/2.3.6/azuremediaplayer.min.js"></script>
+</head>
+<style>
+    html {
+        font-family: Poppins;
+        background: #000;
+        margin: 0;
+        padding: 0;
+    }
+    
+    .loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        z-index: 9999;
+    }
+    
+    .loading-text {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+        text-align: center;
+        width: 100%;
+        height: 100px;
+        line-height: 100px;
+    }
+    
+    .loading-text span {
+        display: inline-block;
+        margin: 0 5px;
+        color: #00b3ff;
+        font-family: 'Quattrocento Sans', sans-serif;
+    }
+    
+    .loading-text span:nth-child(1) {
+        filter: blur(0px);
+        animation: blur-text 1.5s 0s infinite linear alternate;
+    }
+    
+    .loading-text span:nth-child(2) {
+        filter: blur(0px);
+        animation: blur-text 1.5s 0.2s infinite linear alternate;
+    }
+    
+    .loading-text span:nth-child(3) {
+        filter: blur(0px);
+        animation: blur-text 1.5s 0.4s infinite linear alternate;
+    }
+    
+    .loading-text span:nth-child(4) {
+        filter: blur(0px);
+        animation: blur-text 1.5s 0.6s infinite linear alternate;
+    }
+    
+    .loading-text span:nth-child(5) {
+        filter: blur(0px);
+        animation: blur-text 1.5s 0.8s infinite linear alternate;
+    }
+    
+    .loading-text span:nth-child(6) {
+        filter: blur(0px);
+        animation: blur-text 1.5s 1s infinite linear alternate;
+    }
+    
+    .loading-text span:nth-child(7) {
+        filter: blur(0px);
+        animation: blur-text 1.5s 1.2s infinite linear alternate;
+    }
+    
+    @keyframes blur-text {
+        0% {
+            filter: blur(0px);
+        }
+        100% {
+            filter: blur(4px);
+        }
+    }
+</style>
+
+<body>
+    <div id="loading" class="loading">
+        <div class="loading-text">
+            <span class="loading-text-words">L</span>
+            <span class="loading-text-words">O</span>
+            <span class="loading-text-words">A</span>
+            <span class="loading-text-words">D</span>
+            <span class="loading-text-words">I</span>
+            <span class="loading-text-words">N</span>
+            <span class="loading-text-words">G</span>
+        </div>
+    </div>
+    <div>
+        <video id="azuremediaplayer" poster="${poster}" class="azuremediaplayer amp-default-skin amp-big-play-centered" tabindex="0"></video>
+    </div>
+</body>
+<script>
+    setTimeout(videovisible, 5000);
+
+    function videovisible() {
+        document.getElementById('loading').style.display = 'none';
+    };
+
+    var myOptions = {
+        "nativeControlsForTouch": false,
+        controls: true,
+        autoplay: true,
+        width: "100%",
+        height: "100%",
+    };
+    myPlayer = amp("azuremediaplayer", myOptions);
+    myPlayer.src([{
+        "src": "${link}",
+        "type": "application/vnd.ms-sstr+xml",
+        "protectionInfo": [{
+            "type": "PlayReady",
+            "authenticationToken": "${token}"
+        }, {
+            "type": "Widevine",
+            "authenticationToken": "${token}"
+        }]
+    }]);
+</script>
+
+</html>
