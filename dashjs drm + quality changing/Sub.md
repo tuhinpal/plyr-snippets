@@ -1,3 +1,4 @@
+        fetch("url")
         .then(response => response.text())
         .then(result => {
             var blob = new Blob([result], {
@@ -5,7 +6,7 @@
             });
             const track = document.createElement('track');
             Object.assign(track, {
-                label: '${subtitle.language}',
+                label: 'language',
                 default: true,
                 src: window.URL.createObjectURL(blob)
             });
