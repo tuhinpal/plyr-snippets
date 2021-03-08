@@ -1,0 +1,143 @@
+<html>
+
+<head>
+    <title>Plyr</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel='stylesheet' href='https://cdn.plyr.io/3.6.2/plyr.css'>
+    <link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet" />
+    <script src="https://cdn.plyr.io/3.6.2/plyr.js"></script>
+    <script src="https://www.altbalaji.com/assets/alt-player/shaka-player.compiled.js"></script>
+</head>
+<style>
+    html {
+        font-family: Poppins;
+        background: #000;
+        margin: 0;
+        padding: 0;
+    }
+</style>
+
+<body>
+    <div>
+        <video preload="none" id="player" autoplay controls crossorigin></video>
+    </div>
+</body>
+<script>
+    (function() {
+        var video = document.querySelector('#player');
+        initApp();
+
+        function initApp() {
+            shaka.polyfill.installAll();
+            if (shaka.Player.isBrowserSupported()) {
+                initPlayer();
+            } else {
+                console.error('Browser not supported!');
+            }
+        }
+
+        function initPlayer() {
+            var video = document.querySelector('#player');
+            var player = new shaka.Player(video);
+            player.addEventListener('error', onErrorEvent);
+
+            player.getNetworkingEngine().registerRequestFilter(function(type, request) {
+                var StringUtils = shaka.util.StringUtils;
+                var Uint8ArrayUtils = shaka.util.Uint8ArrayUtils;
+                if (type == shaka.net.NetworkingEngine.RequestType.LICENSE) {
+                    var rawLicenseRequest = new Uint8Array(request.body);
+                    var wrapped = {};
+                    request.allowCrossSiteCredentials = true;
+                    wrapped.payload = btoa(String.fromCharCode.apply(null, rawLicenseRequest));
+                    wrapped.content_id = 'undefined';
+                    wrapped.ticket = "c66027ff-d1f1-4ac7-8de3-6fdce44d14a7";
+                    var wrappedJson = JSON.stringify(wrapped);
+                    request.body = new Uint8Array(wrappedJson.length);
+                    for (var i = 0; i < wrappedJson.length; ++i) {
+                        request.body[i] = wrappedJson.charCodeAt(i);
+                    }
+                }
+            });
+
+            player.getNetworkingEngine().registerResponseFilter(function(type, response) {
+                var StringUtils = shaka.util.StringUtils;
+                var Uint8ArrayUtils = shaka.util.Uint8ArrayUtils;
+                if (type == shaka.net.NetworkingEngine.RequestType.LICENSE) {
+                    var wrappedArray = new Uint8Array(response.data);
+                    var wrappedString = String.fromCharCode.apply(null, wrappedArray);
+                    var wrapped = JSON.parse(wrappedString);
+                    var rawLicenseBase64 = wrapped.license;
+                    var rawLicenseString = atob(rawLicenseBase64);
+                    response.data = new Uint8Array(rawLicenseString.length);
+                    for (var i = 0; i < rawLicenseString.length; ++i) {
+                        response.data[i] = rawLicenseString.charCodeAt(i);
+                    }
+                }
+            });
+
+            player.configure({
+                drm: {
+                    servers: {
+                        'com.widevine.alpha': 'https://api.cloud.altbalaji.com/player/drm/widevine-modular',
+                        'com.microsoft.playready': 'https://playready-ap-southeast-1-production.cloud.xstream.dk/playready/RightsManager.asmx'
+                    }
+                }
+            });
+
+            player.load('https://cdn.cloud.altbalaji.com/content/2020-11/7337-5fb29cc66fb55/manifest.mpd')
+                .then(function() {
+
+                    var variantTracks = player.getVariantTracks();
+                    var bitrates = [];
+                    variantTracks.sort(function(a, b) {
+                        return a.bandwidth - b.bandwidth;
+                    });
+                    var groupAudios = [];
+                    for (var i = 0; i <= variantTracks.length - 1; i++) {
+                        if (groupAudios.includes(variantTracks[i].audioId)) {
+                            break;
+                        }
+                        groupAudios.push(variantTracks[i].audioId);
+                    }
+                    for (var i = groupAudios.length - 1; i <= variantTracks.length - 1; i += groupAudios.length) {
+                        bitrates.push(variantTracks[i]);
+                    }
+
+                    new Plyr(video, {
+                        "autoplay": false,
+                        "muted": false,
+                        "loop": {
+                            "active": false
+                        },
+                        "captions": {
+                            "active": true,
+                            "update": true
+                        },
+                        quality: {
+                            default: bitrates[0].height,
+                            options: bitrates.map(j => j.height),
+                            forced: true,
+                            onChange: function(newQuality) {
+                                player.configure({
+                                    abr: {
+                                        enabled: false
+                                    }
+                                })
+
+                                var tracks = player.getVariantTracks().filter(tk => tk.height === newQuality)
+                                player.selectVariantTrack(tracks[0], true);
+                            }
+                        }
+                    });
+                });
+        }
+
+        function onErrorEvent(event) {
+            console.error(event.detail);
+        }
+    })();
+</script>
+
+</html>
