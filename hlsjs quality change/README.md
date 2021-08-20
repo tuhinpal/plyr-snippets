@@ -1,1 +1,1 @@
-### Hls Js Quality Changing
+### Hls Js with Quality Changing

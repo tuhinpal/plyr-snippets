@@ -8,7 +8,7 @@
     <link rel='stylesheet' href='https://cdn.plyr.io/3.6.2/plyr.css'>
     <link href="https://fonts.googleapis.com/css?family=Poppins" rel="stylesheet" />
     <script src="https://cdn.plyr.io/3.6.2/plyr.js"></script>
-    <script src="https://www.altbalaji.com/assets/alt-player/shaka-player.compiled.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/3.2.0/shaka-player.compiled.js"></script>
 </head>
 <style>
     html {
@@ -25,7 +25,7 @@
     </div>
 </body>
 <script>
-    (function() {
+    (function () {
         var video = document.querySelector('#player');
         initApp();
 
@@ -43,7 +43,9 @@
             var player = new shaka.Player(video);
             player.addEventListener('error', onErrorEvent);
 
-            player.getNetworkingEngine().registerRequestFilter(function(type, request) {
+            // License wrapping requestfilter
+
+            player.getNetworkingEngine().registerRequestFilter(function (type, request) {
                 var StringUtils = shaka.util.StringUtils;
                 var Uint8ArrayUtils = shaka.util.Uint8ArrayUtils;
                 if (type == shaka.net.NetworkingEngine.RequestType.LICENSE) {
@@ -52,7 +54,7 @@
                     request.allowCrossSiteCredentials = true;
                     wrapped.payload = btoa(String.fromCharCode.apply(null, rawLicenseRequest));
                     wrapped.content_id = 'undefined';
-                    wrapped.ticket = "c66027ff-d1f1-4ac7-8de3-6fdce44d14a7";
+                    wrapped.ticket = "";
                     var wrappedJson = JSON.stringify(wrapped);
                     request.body = new Uint8Array(wrappedJson.length);
                     for (var i = 0; i < wrappedJson.length; ++i) {
@@ -61,7 +63,9 @@
                 }
             });
 
-            player.getNetworkingEngine().registerResponseFilter(function(type, response) {
+            // License wrapping responsefilter
+
+            player.getNetworkingEngine().registerResponseFilter(function (type, response) {
                 var StringUtils = shaka.util.StringUtils;
                 var Uint8ArrayUtils = shaka.util.Uint8ArrayUtils;
                 if (type == shaka.net.NetworkingEngine.RequestType.LICENSE) {
@@ -79,19 +83,19 @@
 
             player.configure({
                 drm: {
-                    servers: {
-                        'com.widevine.alpha': 'https://api.cloud.altbalaji.com/player/drm/widevine-modular',
-                        'com.microsoft.playready': 'https://playready-ap-southeast-1-production.cloud.xstream.dk/playready/RightsManager.asmx'
+                    servers: { // license servers
+                        'com.widevine.alpha': '',
+                        'com.microsoft.playready': ''
                     }
                 }
             });
 
-            player.load('https://cdn.cloud.altbalaji.com/content/2020-11/7337-5fb29cc66fb55/manifest.mpd')
-                .then(function() {
+            player.load('') // source
+                .then(function () {
 
                     var variantTracks = player.getVariantTracks();
                     var bitrates = [];
-                    variantTracks.sort(function(a, b) {
+                    variantTracks.sort(function (a, b) {
                         return a.bandwidth - b.bandwidth;
                     });
                     var groupAudios = [];
@@ -119,7 +123,7 @@
                             default: bitrates[0].height,
                             options: bitrates.map(j => j.height),
                             forced: true,
-                            onChange: function(newQuality) {
+                            onChange: function (newQuality) {
                                 player.configure({
                                     abr: {
                                         enabled: false
